@@ -64,7 +64,7 @@ function AdminPage() {
 
   const reject = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("reject_deposit", { _deposit_id: id, _note: null });
+      const { error } = await supabase.rpc("reject_deposit", { _deposit_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
