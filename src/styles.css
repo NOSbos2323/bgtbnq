@@ -175,6 +175,24 @@
     letter-spacing: -0.01em;
   }
 
+  .bank-input {
+    width: 100%;
+    background: oklch(1 0 0 / 0.04);
+    border: 1px solid oklch(1 0 0 / 0.08);
+    color: var(--color-foreground);
+    border-radius: 0.875rem;
+    padding: 0.75rem 0.875rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .bank-input::placeholder { color: oklch(0.6 0.02 240); }
+  .bank-input:focus {
+    border-color: oklch(0.78 0.18 158 / 0.6);
+    box-shadow: 0 0 0 4px oklch(0.78 0.18 158 / 0.12);
+    background: oklch(1 0 0 / 0.06);
+  }
+
   /* RTL/LTR helpers */
   [dir="rtl"] .flip-x {
     transform: scaleX(-1);
