@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n, type Lang } from "@/lib/i18n";
 import { toast } from "sonner";
-import { User as UserIcon, Globe, LogOut, ShieldCheck, Bell } from "lucide-react";
+import { User as UserIcon, Globe, LogOut, ShieldCheck, Bell, BadgeCheck, Clock, ShieldAlert, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -14,6 +14,7 @@ function SettingsPage() {
   const { t, lang, setLang } = useI18n();
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const profile = useQuery({
     queryKey: ["profile-full", user?.id],
@@ -22,6 +23,32 @@ function SettingsPage() {
       return data;
     },
     enabled: !!user,
+  });
+
+  const wallet = useQuery({
+    queryKey: ["wallet-settings", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("wallets").select("balance_usd").eq("user_id", user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const requestVerify = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("request_verification");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success(lang === "ar" ? "تم إرسال طلب التوثيق" : "Verification request sent");
+      qc.invalidateQueries({ queryKey: ["profile-full"] });
+    },
+    onError: (e: any) => {
+      const msg = String(e?.message ?? "");
+      if (msg.includes("insufficient balance"))
+        return toast.error(lang === "ar" ? "تحتاج 3000 دج على الأقل في رصيدك" : "You need at least 3000 DZD in balance");
+      toast.error(msg || t("error_generic"));
+    },
   });
 
   const handleLogout = async () => {
