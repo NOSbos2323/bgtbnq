@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
 import {
-  Eye, EyeOff, ArrowDownToLine, Coins, CreditCard, Gift,
+  Eye, EyeOff, ArrowDownToLine, Send, CreditCard, Gift,
   ArrowUpRight, ArrowDownLeft, Bell,
 } from "lucide-react";
 
@@ -119,7 +119,7 @@ function Dashboard() {
         <h2 className="text-sm font-bold mb-3 text-muted-foreground">{t("quick_actions")}</h2>
         <div className="grid grid-cols-4 gap-3">
           <QuickAction to="/deposit" icon={<ArrowDownToLine className="h-5 w-5" />} label={t("recharge")} accent="emerald" />
-          <QuickAction to="/loans" icon={<Coins className="h-5 w-5" />} label={t("request_loan")} accent="cyan" />
+          <QuickAction to="/transfers" icon={<Send className="h-5 w-5" />} label={t("transfers")} accent="cyan" />
           <QuickAction to="/cards" icon={<CreditCard className="h-5 w-5" />} label={t("new_card")} accent="emerald" />
           <QuickAction to="/referrals" icon={<Gift className="h-5 w-5" />} label={t("referral_program")} accent="cyan" />
         </div>

@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useLocation, Link, useNavigate } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
-import { Home, CreditCard, ArrowDownToLine, Coins, Settings, ShieldCheck } from "lucide-react";
+import { Home, CreditCard, ArrowDownToLine, Send, Settings, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthLayout,
@@ -30,7 +30,7 @@ function AuthLayout() {
     { to: "/app", icon: Home, label: t("home") },
     { to: "/cards", icon: CreditCard, label: t("cards") },
     { to: "/deposit", icon: ArrowDownToLine, label: t("deposit"), primary: true },
-    { to: "/loans", icon: Coins, label: t("loans") },
+    { to: "/transfers", icon: Send, label: t("transfers") },
     { to: "/settings", icon: Settings, label: t("settings") },
   ];
 
