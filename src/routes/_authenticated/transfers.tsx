@@ -91,7 +91,7 @@ function TransfersPage() {
       const { error } = await supabase.rpc("send_transfer", {
         _recipient_identifier: identifier.trim(),
         _amount: a,
-        _note: note || null,
+        _note: note || undefined,
       });
       if (error) throw error;
     },

@@ -241,7 +241,7 @@ function VerificationsTab() {
 
   const approve = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("approve_verification", { _request_id: id, _note: null });
+      const { error } = await supabase.rpc("approve_verification", { _request_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -254,7 +254,7 @@ function VerificationsTab() {
 
   const reject = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("reject_verification", { _request_id: id, _note: null });
+      const { error } = await supabase.rpc("reject_verification", { _request_id: id });
       if (error) throw error;
     },
     onSuccess: () => {
