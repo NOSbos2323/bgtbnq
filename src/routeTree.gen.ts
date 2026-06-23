@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedReferralsRouteImport } from './routes/_authenticated/referrals'
-import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated/loans'
 import { Route as AuthenticatedDepositRouteImport } from './routes/_authenticated/deposit'
 import { Route as AuthenticatedCardsRouteImport } from './routes/_authenticated/cards'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -42,11 +41,6 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedReferralsRoute = AuthenticatedReferralsRouteImport.update({
   id: '/referrals',
   path: '/referrals',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLoansRoute = AuthenticatedLoansRouteImport.update({
-  id: '/loans',
-  path: '/loans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDepositRoute = AuthenticatedDepositRouteImport.update({
@@ -77,7 +71,6 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/cards': typeof AuthenticatedCardsRoute
   '/deposit': typeof AuthenticatedDepositRoute
-  '/loans': typeof AuthenticatedLoansRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -88,7 +81,6 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/cards': typeof AuthenticatedCardsRoute
   '/deposit': typeof AuthenticatedDepositRoute
-  '/loans': typeof AuthenticatedLoansRoute
   '/referrals': typeof AuthenticatedReferralsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
@@ -101,7 +93,6 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/cards': typeof AuthenticatedCardsRoute
   '/_authenticated/deposit': typeof AuthenticatedDepositRoute
-  '/_authenticated/loans': typeof AuthenticatedLoansRoute
   '/_authenticated/referrals': typeof AuthenticatedReferralsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
@@ -114,7 +105,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/cards'
     | '/deposit'
-    | '/loans'
     | '/referrals'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -125,7 +115,6 @@ export interface FileRouteTypes {
     | '/app'
     | '/cards'
     | '/deposit'
-    | '/loans'
     | '/referrals'
     | '/settings'
   id:
@@ -137,7 +126,6 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/cards'
     | '/_authenticated/deposit'
-    | '/_authenticated/loans'
     | '/_authenticated/referrals'
     | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
@@ -185,13 +173,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReferralsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/loans': {
-      id: '/_authenticated/loans'
-      path: '/loans'
-      fullPath: '/loans'
-      preLoaderRoute: typeof AuthenticatedLoansRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/deposit': {
       id: '/_authenticated/deposit'
       path: '/deposit'
@@ -228,7 +209,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedCardsRoute: typeof AuthenticatedCardsRoute
   AuthenticatedDepositRoute: typeof AuthenticatedDepositRoute
-  AuthenticatedLoansRoute: typeof AuthenticatedLoansRoute
   AuthenticatedReferralsRoute: typeof AuthenticatedReferralsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -238,7 +218,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedCardsRoute: AuthenticatedCardsRoute,
   AuthenticatedDepositRoute: AuthenticatedDepositRoute,
-  AuthenticatedLoansRoute: AuthenticatedLoansRoute,
   AuthenticatedReferralsRoute: AuthenticatedReferralsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
