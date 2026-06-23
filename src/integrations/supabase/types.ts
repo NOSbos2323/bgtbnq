@@ -129,11 +129,16 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_admin_account: boolean
           language: string
           phone: string | null
           referral_code: string
           referred_by: string | null
+          rib: string | null
           updated_at: string
+          verification_note: string | null
+          verification_status: string
+          verified_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -141,11 +146,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_admin_account?: boolean
           language?: string
           phone?: string | null
           referral_code: string
           referred_by?: string | null
+          rib?: string | null
           updated_at?: string
+          verification_note?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -153,11 +163,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_admin_account?: boolean
           language?: string
           phone?: string | null
           referral_code?: string
           referred_by?: string | null
+          rib?: string | null
           updated_at?: string
+          verification_note?: string | null
+          verification_status?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -229,6 +244,33 @@ export type Database = {
         }
         Relationships: []
       }
+      transfers: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          id: string
+          note: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -246,6 +288,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verification_requests: {
+        Row: {
+          admin_note: string | null
+          balance_at_request_usd: number
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          balance_at_request_usd?: number
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          balance_at_request_usd?: number
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -324,6 +399,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_adjust_wallet: {
+        Args: { _delta: number; _reason?: string; _user_id: string }
+        Returns: number
+      }
+      admin_update_user_rib: {
+        Args: { _rib: string; _user_id: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin_account: boolean
+          language: string
+          phone: string | null
+          referral_code: string
+          referred_by: string | null
+          rib: string | null
+          updated_at: string
+          verification_note: string | null
+          verification_status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_deposit: {
         Args: { _deposit_id: string; _note?: string }
         Returns: {
@@ -346,6 +451,25 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approve_verification: {
+        Args: { _note?: string; _request_id: string }
+        Returns: {
+          admin_note: string | null
+          balance_at_request_usd: number
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "verification_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       gen_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -353,6 +477,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      lookup_recipient: {
+        Args: { _identifier: string }
+        Returns: {
+          email: string
+          full_name: string
+          id: string
+          is_admin_account: boolean
+          verification_status: string
+        }[]
       }
       reject_deposit: {
         Args: { _deposit_id: string; _note?: string }
@@ -372,6 +506,61 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "deposits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reject_verification: {
+        Args: { _note?: string; _request_id: string }
+        Returns: {
+          admin_note: string | null
+          balance_at_request_usd: number
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "verification_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      request_verification: {
+        Args: never
+        Returns: {
+          admin_note: string | null
+          balance_at_request_usd: number
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "verification_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      send_transfer: {
+        Args: { _amount: number; _note?: string; _recipient_identifier: string }
+        Returns: {
+          amount_usd: number
+          created_at: string
+          id: string
+          note: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfers"
           isOneToOne: true
           isSetofReturn: false
         }
