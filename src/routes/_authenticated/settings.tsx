@@ -74,13 +74,29 @@ function SettingsPage() {
       {/* Profile card */}
       <div className="glass-strong card-3d rounded-3xl p-5 flex items-center gap-4">
         <div className="h-14 w-14 grid place-items-center rounded-2xl bg-primary/15 text-primary">
-          <UserIcon className="h-7 w-7" />
+          {profile.data?.is_admin_account ? <Crown className="h-7 w-7 text-yellow-300" /> : <UserIcon className="h-7 w-7" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-bold truncate">{profile.data?.full_name ?? user?.email}</div>
+          <div className="font-bold truncate flex items-center gap-1.5">
+            {profile.data?.full_name ?? user?.email}
+            {profile.data?.verification_status === "verified" && <BadgeCheck className="h-4 w-4 text-primary" />}
+          </div>
           <div className="text-xs text-muted-foreground truncate" dir="ltr">{user?.email}</div>
+          {profile.data?.rib && (
+            <div className="text-[10px] text-muted-foreground num-mono truncate mt-0.5" dir="ltr">RIB: {profile.data.rib}</div>
+          )}
         </div>
       </div>
+
+      {/* Verification */}
+      <Section title={t("verify_account")} icon={<BadgeCheck className="h-4 w-4" />}>
+        <VerificationCard
+          status={profile.data?.verification_status ?? "unverified"}
+          balanceUsd={Number(wallet.data?.balance_usd ?? 0)}
+          onRequest={() => requestVerify.mutate()}
+          loading={requestVerify.isPending}
+        />
+      </Section>
 
       {/* Language */}
       <Section title={t("language")} icon={<Globe className="h-4 w-4" />}>
