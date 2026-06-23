@@ -1,4 +1,5 @@
-import { createFileRoute, Navigate, Outlet, useLocation, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { Home, CreditCard, ArrowDownToLine, Coins, Settings, ShieldCheck } from "lucide-react";
@@ -11,15 +12,19 @@ function AuthLayout() {
   const { user, loading, isAdmin } = useAuth();
   const { t } = useI18n();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth", replace: true });
+  }, [loading, user, navigate]);
+
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
   }
-  if (!user) return <Navigate to="/auth" />;
 
   const navItems = [
     { to: "/app", icon: Home, label: t("home") },
