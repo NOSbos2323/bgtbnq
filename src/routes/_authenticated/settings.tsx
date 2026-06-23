@@ -152,6 +152,93 @@ function SettingsPage() {
   );
 }
 
+const RATE = 250;
+const MIN_DZD = 3000;
+
+function VerificationCard({ status, balanceUsd, onRequest, loading }: {
+  status: string; balanceUsd: number; onRequest: () => void; loading: boolean;
+}) {
+  const { lang, t } = useI18n();
+  const balanceDzd = balanceUsd * RATE;
+  const meets = balanceDzd >= MIN_DZD;
+  const pct = Math.min(100, (balanceDzd / MIN_DZD) * 100);
+
+  if (status === "verified") {
+    return (
+      <div className="glass rounded-2xl p-4 flex items-center gap-3 border border-primary/30">
+        <BadgeCheck className="h-6 w-6 text-primary" />
+        <div className="flex-1">
+          <div className="font-bold text-sm">{lang === "ar" ? "حسابك موثق ✓" : "Account verified ✓"}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {lang === "ar" ? "يمكنك الإرسال والاستقبال دون قيود." : "You can send and receive without limits."}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <div className="glass rounded-2xl p-4 flex items-center gap-3 border border-yellow-500/30">
+        <Clock className="h-6 w-6 text-yellow-400" />
+        <div className="flex-1">
+          <div className="font-bold text-sm">{t("verify_pending")}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {lang === "ar" ? "ستصلك إشعار فور المراجعة." : "You'll be notified shortly."}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass rounded-2xl p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <ShieldAlert className="h-5 w-5 text-yellow-400 shrink-0 mt-0.5" />
+        <div className="text-xs flex-1">
+          <div className="font-bold mb-1">{t("verify_hint")}</div>
+          <div className="text-muted-foreground">
+            {lang === "ar"
+              ? "التوثيق مجاني — فقط احتفظ بالمبلغ كادخار في رصيدك."
+              : "Verification is free — just keep the amount as savings in your balance."}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between text-[11px] mb-1.5">
+          <span className="text-muted-foreground">{lang === "ar" ? "رصيدك" : "Your balance"}</span>
+          <span className="num-mono font-bold" dir="ltr">
+            {balanceDzd.toLocaleString(undefined, { maximumFractionDigits: 0 })} / {MIN_DZD} DZD
+          </span>
+        </div>
+        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+          <div
+            className={`h-full transition-all ${meets ? "bg-primary" : "bg-yellow-400"}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={onRequest}
+        disabled={loading || !meets}
+        className="w-full rounded-2xl bg-primary py-3 font-bold text-primary-foreground neon-emerald disabled:opacity-50 inline-flex items-center justify-center gap-2"
+      >
+        <BadgeCheck className="h-4 w-4" />
+        {loading ? t("loading") : t("request_verify")}
+      </button>
+      {!meets && (
+        <p className="text-[10px] text-muted-foreground text-center">
+          {lang === "ar"
+            ? `اشحن المزيد للوصول إلى ${MIN_DZD} دج`
+            : `Top up to reach ${MIN_DZD} DZD`}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
