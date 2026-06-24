@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       deposits: {
         Row: {
           admin_note: string | null
@@ -126,6 +147,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deposit_rib: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -135,6 +157,7 @@ export type Database = {
           referral_code: string
           referred_by: string | null
           rib: string | null
+          telegram_chat_id: string | null
           updated_at: string
           verification_note: string | null
           verification_status: string
@@ -143,6 +166,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deposit_rib?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -152,6 +176,7 @@ export type Database = {
           referral_code: string
           referred_by?: string | null
           rib?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
           verification_note?: string | null
           verification_status?: string
@@ -160,6 +185,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deposit_rib?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -169,6 +195,7 @@ export type Database = {
           referral_code?: string
           referred_by?: string | null
           rib?: string | null
+          telegram_chat_id?: string | null
           updated_at?: string
           verification_note?: string | null
           verification_status?: string
@@ -246,28 +273,40 @@ export type Database = {
       }
       transfers: {
         Row: {
+          admin_note: string | null
           amount_usd: number
           created_at: string
           id: string
           note: string | null
           recipient_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           sender_id: string
+          status: string
         }
         Insert: {
+          admin_note?: string | null
           amount_usd: number
           created_at?: string
           id?: string
           note?: string | null
           recipient_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sender_id: string
+          status?: string
         }
         Update: {
+          admin_note?: string | null
           amount_usd?: number
           created_at?: string
           id?: string
           note?: string | null
           recipient_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           sender_id?: string
+          status?: string
         }
         Relationships: []
       }
@@ -403,11 +442,13 @@ export type Database = {
         Args: { _delta: number; _reason?: string; _user_id: string }
         Returns: number
       }
-      admin_update_user_rib: {
+      admin_get_user_details: { Args: { _user_id: string }; Returns: Json }
+      admin_set_deposit_rib: {
         Args: { _rib: string; _user_id: string }
         Returns: {
           avatar_url: string | null
           created_at: string
+          deposit_rib: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -417,6 +458,35 @@ export type Database = {
           referral_code: string
           referred_by: string | null
           rib: string | null
+          telegram_chat_id: string | null
+          updated_at: string
+          verification_note: string | null
+          verification_status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_update_user_rib: {
+        Args: { _rib: string; _user_id: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          deposit_rib: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin_account: boolean
+          language: string
+          phone: string | null
+          referral_code: string
+          referred_by: string | null
+          rib: string | null
+          telegram_chat_id: string | null
           updated_at: string
           verification_note: string | null
           verification_status: string
@@ -447,6 +517,27 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "deposits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approve_transfer: {
+        Args: { _note?: string; _transfer_id: string }
+        Returns: {
+          admin_note: string | null
+          amount_usd: number
+          created_at: string
+          id: string
+          note: string | null
+          recipient_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfers"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -510,6 +601,27 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      reject_transfer: {
+        Args: { _note?: string; _transfer_id: string }
+        Returns: {
+          admin_note: string | null
+          amount_usd: number
+          created_at: string
+          id: string
+          note: string | null
+          recipient_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reject_verification: {
         Args: { _note?: string; _request_id: string }
         Returns: {
@@ -551,12 +663,16 @@ export type Database = {
       send_transfer: {
         Args: { _amount: number; _note?: string; _recipient_identifier: string }
         Returns: {
+          admin_note: string | null
           amount_usd: number
           created_at: string
           id: string
           note: string | null
           recipient_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
           sender_id: string
+          status: string
         }
         SetofOptions: {
           from: "*"
@@ -565,6 +681,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_my_telegram_chat: { Args: { _chat_id: string }; Returns: undefined }
       topup_card: {
         Args: { _amount: number; _card_id: string }
         Returns: {
@@ -606,6 +723,11 @@ export type Database = {
         | "card_refund"
         | "referral_bonus"
         | "adjustment"
+        | "transfer_out"
+        | "transfer_in"
+        | "transfer_hold"
+        | "transfer_refund"
+        | "admin_adjustment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -745,6 +867,11 @@ export const Constants = {
         "card_refund",
         "referral_bonus",
         "adjustment",
+        "transfer_out",
+        "transfer_in",
+        "transfer_hold",
+        "transfer_refund",
+        "admin_adjustment",
       ],
     },
   },

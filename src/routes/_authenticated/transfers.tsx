@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { notifyAdmin } from "@/lib/notify-admin";
 import {
   Send, ArrowDownLeft, ArrowUpRight, Search, BadgeCheck, ShieldAlert, Crown,
 } from "lucide-react";
@@ -61,7 +62,7 @@ function TransfersPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("transfers")
-        .select("id, sender_id, recipient_id, amount_usd, note, created_at")
+        .select("id, sender_id, recipient_id, amount_usd, note, status, created_at, admin_note")
         .or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -96,7 +97,10 @@ function TransfersPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(lang === "ar" ? "تم الإرسال بنجاح" : "Transfer sent");
+      toast.success(lang === "ar"
+        ? "تم استلام طلب التحويل وحجز المبلغ، بانتظار موافقة الإدارة."
+        : "Transfer queued and amount held — awaiting admin approval.");
+      notifyAdmin("transfer", `Pending transfer: ${user?.email} → ${recipient?.email} · $${Number(amount).toFixed(2)}${note ? ` · "${note}"` : ""}`);
       setAmount(""); setNote(""); setRecipient(null); setIdentifier("");
       qc.invalidateQueries({ queryKey: ["transfers"] });
       qc.invalidateQueries({ queryKey: ["wallet"] });
@@ -243,21 +247,29 @@ function TransfersPage() {
         </h2>
         <div className="glass-strong rounded-3xl divide-y divide-white/5">
           {history.data && history.data.length > 0 ? (
-            history.data.map((tr) => {
+            history.data.map((tr: any) => {
               const incoming = tr.recipient_id === user?.id;
+              const st = tr.status as string;
+              const stMap: Record<string, { ar: string; en: string; cls: string }> = {
+                pending:  { ar: "قيد المراجعة", en: "Pending",  cls: "bg-yellow-400/15 text-yellow-300" },
+                approved: { ar: "مقبول",        en: "Approved", cls: "bg-primary/15 text-primary" },
+                rejected: { ar: "مرفوض",        en: "Rejected", cls: "bg-destructive/15 text-destructive" },
+              };
+              const stInfo = stMap[st] ?? stMap.pending;
               return (
                 <div key={tr.id} className="flex items-center gap-3 p-4">
                   <div className={`h-10 w-10 grid place-items-center rounded-2xl ${incoming ? "bg-primary/15 text-primary" : "bg-accent/15 text-accent"}`}>
                     {incoming ? <ArrowDownLeft className="h-5 w-5" /> : <ArrowUpRight className="h-5 w-5" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">
-                      {incoming
-                        ? (lang === "ar" ? "وارد" : "Received")
-                        : (lang === "ar" ? "صادر" : "Sent")}
+                    <p className="text-sm font-semibold inline-flex items-center gap-2">
+                      {incoming ? (lang === "ar" ? "وارد" : "Received") : (lang === "ar" ? "صادر" : "Sent")}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stInfo.cls}`}>
+                        {lang === "ar" ? stInfo.ar : stInfo.en}
+                      </span>
                     </p>
                     <p className="text-[11px] text-muted-foreground truncate">
-                      {tr.note || new Date(tr.created_at).toLocaleString(lang === "ar" ? "ar-DZ" : "en-US")}
+                      {tr.note || tr.admin_note || new Date(tr.created_at).toLocaleString(lang === "ar" ? "ar-DZ" : "en-US")}
                     </p>
                   </div>
                   <div className={`num-mono text-sm font-bold ${incoming ? "text-primary" : "text-foreground"}`} dir="ltr">

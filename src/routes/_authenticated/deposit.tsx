@@ -5,14 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { notifyAdmin } from "@/lib/notify-admin";
 import { Copy, Check, Upload, ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/deposit")({
   component: DepositPage,
 });
 
-const RIP = "00799999000123456789";
-const DEFAULT_RATE = 250; // 1 USD = 250 DZD (illustrative)
+const FALLBACK_RIP = "00799999000123456789";
+const DEFAULT_RATE = 250;
 
 function DepositPage() {
   const { t, lang } = useI18n();
@@ -22,6 +23,27 @@ function DepositPage() {
   const [amountUsd, setAmountUsd] = useState("");
   const [rate, setRate] = useState(String(DEFAULT_RATE));
   const [file, setFile] = useState<File | null>(null);
+
+  // Per-user RIB (if admin set one), else global default from app_settings
+  const ripQ = useQuery({
+    queryKey: ["my-deposit-rib", user?.id],
+    queryFn: async () => {
+      const [{ data: prof }, { data: settings }] = await Promise.all([
+        supabase.from("profiles").select("deposit_rib").eq("id", user!.id).maybeSingle(),
+        supabase.from("app_settings").select("key,value").in("key", ["default_deposit_rib", "default_deposit_name", "exchange_rate_dzd_usd"]),
+      ]);
+      const map = Object.fromEntries((settings ?? []).map((s: any) => [s.key, s.value]));
+      return {
+        rib: prof?.deposit_rib || map.default_deposit_rib || FALLBACK_RIP,
+        name: map.default_deposit_name || "E-Bank Algeria",
+        personal: !!prof?.deposit_rib,
+        defaultRate: map.exchange_rate_dzd_usd ? Number(map.exchange_rate_dzd_usd) : DEFAULT_RATE,
+      };
+    },
+    enabled: !!user,
+  });
+
+  const RIP = ripQ.data?.rib ?? FALLBACK_RIP;
 
   const deposits = useQuery({
     queryKey: ["my-deposits", user?.id],
@@ -61,6 +83,7 @@ function DepositPage() {
     },
     onSuccess: () => {
       toast.success(lang === "ar" ? "تم إرسال الطلب للمراجعة" : "Request sent for review");
+      notifyAdmin("deposit", `New deposit: ${user?.email} · $${Number(amountUsd).toFixed(2)} (${(Number(amountUsd) * Number(rate)).toLocaleString()} DZD)`);
       setAmountUsd("");
       setFile(null);
       qc.invalidateQueries({ queryKey: ["my-deposits"] });
@@ -90,7 +113,14 @@ function DepositPage() {
 
       {/* RIP card */}
       <div className="glass-strong card-3d rounded-3xl p-5">
-        <div className="text-xs text-muted-foreground">{t("rip_label")}</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">{t("rip_label")}</div>
+          {ripQ.data?.personal && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+              {lang === "ar" ? "ريب خاص بك" : "Your personal RIB"}
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="num-mono text-xl font-bold tracking-wider" dir="ltr">{RIP}</div>
           <button
@@ -101,6 +131,7 @@ function DepositPage() {
             {copied ? t("copied") : t("copy")}
           </button>
         </div>
+        <div className="text-[11px] text-muted-foreground mt-2" dir="ltr">{ripQ.data?.name}</div>
       </div>
 
       {/* Submission form */}
