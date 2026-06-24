@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { notifyAdmin } from "@/lib/notify-admin";
 import { Copy, Check, Upload, ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/deposit")({
