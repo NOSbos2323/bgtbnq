@@ -100,6 +100,7 @@ function TransfersPage() {
       toast.success(lang === "ar"
         ? "تم استلام طلب التحويل وحجز المبلغ، بانتظار موافقة الإدارة."
         : "Transfer queued and amount held — awaiting admin approval.");
+      notifyAdmin("transfer", `Pending transfer: ${user?.email} → ${recipient?.email} · $${Number(amount).toFixed(2)}${note ? ` · "${note}"` : ""}`);
       setAmount(""); setNote(""); setRecipient(null); setIdentifier("");
       qc.invalidateQueries({ queryKey: ["transfers"] });
       qc.invalidateQueries({ queryKey: ["wallet"] });
