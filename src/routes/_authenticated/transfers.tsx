@@ -61,7 +61,7 @@ function TransfersPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("transfers")
-        .select("id, sender_id, recipient_id, amount_usd, note, created_at")
+        .select("id, sender_id, recipient_id, amount_usd, note, status, created_at, admin_note")
         .or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`)
         .order("created_at", { ascending: false })
         .limit(20);
