@@ -7,7 +7,8 @@ import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import {
   Check, X, ArrowLeft, Eye, ShieldCheck, BadgeCheck, Users, Wallet,
-  Receipt, Crown, Edit3, Plus, Minus, Search,
+  Receipt, Crown, Edit3, Plus, Minus, Search, Send, CreditCard, Banknote,
+  EyeOff, Snowflake, Sun, Copy,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
