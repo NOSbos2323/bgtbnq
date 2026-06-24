@@ -79,11 +79,12 @@ function AdminHero() {
   const stats = useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [u, totals, pendingDep, pendingVer, myWallet] = await Promise.all([
+      const [u, totals, pendingDep, pendingVer, pendingTr, myWallet] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("wallets").select("balance_usd"),
         supabase.from("deposits").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("verification_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("transfers").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("wallets").select("balance_usd").eq("user_id", user!.id).maybeSingle(),
       ]);
       const totalBalance = (totals.data ?? []).reduce((s, w) => s + Number(w.balance_usd), 0);
@@ -92,6 +93,7 @@ function AdminHero() {
         totalBalance,
         pendingDep: pendingDep.count ?? 0,
         pendingVer: pendingVer.count ?? 0,
+        pendingTr: pendingTr.count ?? 0,
         myBalance: Number(myWallet.data?.balance_usd ?? 0),
       };
     },
