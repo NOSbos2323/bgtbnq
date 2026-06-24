@@ -45,13 +45,15 @@ function AdminPage() {
       <AdminHero />
 
       {/* Tabs */}
-      <div className="glass-strong rounded-2xl p-1.5 grid grid-cols-3 gap-1">
-        <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<Receipt className="h-4 w-4" />} label={lang === "ar" ? "الإيداعات" : "Deposits"} />
-        <TabBtn active={tab === "verifications"} onClick={() => setTab("verifications")} icon={<BadgeCheck className="h-4 w-4" />} label={lang === "ar" ? "التوثيق" : "Verify"} />
-        <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />} label={lang === "ar" ? "المستخدمون" : "Users"} />
+      <div className="glass-strong rounded-2xl p-1.5 grid grid-cols-4 gap-1">
+        <TabBtn active={tab === "deposits"} onClick={() => setTab("deposits")} icon={<Receipt className="h-4 w-4" />} label={lang === "ar" ? "إيداعات" : "Deposits"} />
+        <TabBtn active={tab === "transfers"} onClick={() => setTab("transfers")} icon={<Send className="h-4 w-4" />} label={lang === "ar" ? "تحويلات" : "Transfers"} />
+        <TabBtn active={tab === "verifications"} onClick={() => setTab("verifications")} icon={<BadgeCheck className="h-4 w-4" />} label={lang === "ar" ? "توثيق" : "Verify"} />
+        <TabBtn active={tab === "users"} onClick={() => setTab("users")} icon={<Users className="h-4 w-4" />} label={lang === "ar" ? "مستخدمون" : "Users"} />
       </div>
 
       {tab === "deposits" && <DepositsTab />}
+      {tab === "transfers" && <TransfersTab />}
       {tab === "verifications" && <VerificationsTab />}
       {tab === "users" && <UsersTab />}
     </div>
