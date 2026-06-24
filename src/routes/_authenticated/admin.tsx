@@ -111,10 +111,11 @@ function AdminHero() {
       <div className="relative mt-3 num-mono text-4xl font-extrabold" dir="ltr">
         ${stats.data?.myBalance.toFixed(2) ?? "—"}
       </div>
-      <div className="relative mt-4 grid grid-cols-4 gap-2 text-center">
+      <div className="relative mt-4 grid grid-cols-5 gap-1.5 text-center">
         <Mini label={lang === "ar" ? "مستخدمون" : "Users"} value={String(stats.data?.users ?? "—")} />
         <Mini label={lang === "ar" ? "الإجمالي" : "Total"} value={`$${(stats.data?.totalBalance ?? 0).toFixed(0)}`} />
-        <Mini label={lang === "ar" ? "إيداعات" : "Deps"} value={String(stats.data?.pendingDep ?? 0)} accent />
+        <Mini label={lang === "ar" ? "إيداع" : "Deps"} value={String(stats.data?.pendingDep ?? 0)} accent />
+        <Mini label={lang === "ar" ? "تحويل" : "Trans"} value={String(stats.data?.pendingTr ?? 0)} accent />
         <Mini label={lang === "ar" ? "توثيق" : "Verif"} value={String(stats.data?.pendingVer ?? 0)} accent />
       </div>
     </div>
