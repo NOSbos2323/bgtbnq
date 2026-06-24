@@ -111,7 +111,14 @@ function DepositPage() {
 
       {/* RIP card */}
       <div className="glass-strong card-3d rounded-3xl p-5">
-        <div className="text-xs text-muted-foreground">{t("rip_label")}</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-muted-foreground">{t("rip_label")}</div>
+          {ripQ.data?.personal && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+              {lang === "ar" ? "ريب خاص بك" : "Your personal RIB"}
+            </span>
+          )}
+        </div>
         <div className="mt-2 flex items-center justify-between gap-3">
           <div className="num-mono text-xl font-bold tracking-wider" dir="ltr">{RIP}</div>
           <button
@@ -122,6 +129,7 @@ function DepositPage() {
             {copied ? t("copied") : t("copy")}
           </button>
         </div>
+        <div className="text-[11px] text-muted-foreground mt-2" dir="ltr">{ripQ.data?.name}</div>
       </div>
 
       {/* Submission form */}
