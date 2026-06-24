@@ -83,6 +83,7 @@ function DepositPage() {
     },
     onSuccess: () => {
       toast.success(lang === "ar" ? "تم إرسال الطلب للمراجعة" : "Request sent for review");
+      notifyAdmin("deposit", `New deposit: ${user?.email} · $${Number(amountUsd).toFixed(2)} (${(Number(amountUsd) * Number(rate)).toLocaleString()} DZD)`);
       setAmountUsd("");
       setFile(null);
       qc.invalidateQueries({ queryKey: ["my-deposits"] });
