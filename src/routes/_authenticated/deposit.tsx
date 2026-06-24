@@ -11,8 +11,8 @@ export const Route = createFileRoute("/_authenticated/deposit")({
   component: DepositPage,
 });
 
-const RIP = "00799999000123456789";
-const DEFAULT_RATE = 250; // 1 USD = 250 DZD (illustrative)
+const FALLBACK_RIP = "00799999000123456789";
+const DEFAULT_RATE = 250;
 
 function DepositPage() {
   const { t, lang } = useI18n();
@@ -22,6 +22,27 @@ function DepositPage() {
   const [amountUsd, setAmountUsd] = useState("");
   const [rate, setRate] = useState(String(DEFAULT_RATE));
   const [file, setFile] = useState<File | null>(null);
+
+  // Per-user RIB (if admin set one), else global default from app_settings
+  const ripQ = useQuery({
+    queryKey: ["my-deposit-rib", user?.id],
+    queryFn: async () => {
+      const [{ data: prof }, { data: settings }] = await Promise.all([
+        supabase.from("profiles").select("deposit_rib").eq("id", user!.id).maybeSingle(),
+        supabase.from("app_settings").select("key,value").in("key", ["default_deposit_rib", "default_deposit_name", "exchange_rate_dzd_usd"]),
+      ]);
+      const map = Object.fromEntries((settings ?? []).map((s: any) => [s.key, s.value]));
+      return {
+        rib: prof?.deposit_rib || map.default_deposit_rib || FALLBACK_RIP,
+        name: map.default_deposit_name || "E-Bank Algeria",
+        personal: !!prof?.deposit_rib,
+        defaultRate: map.exchange_rate_dzd_usd ? Number(map.exchange_rate_dzd_usd) : DEFAULT_RATE,
+      };
+    },
+    enabled: !!user,
+  });
+
+  const RIP = ripQ.data?.rib ?? FALLBACK_RIP;
 
   const deposits = useQuery({
     queryKey: ["my-deposits", user?.id],
