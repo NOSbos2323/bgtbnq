@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "deposits" | "verifications" | "users";
+type Tab = "deposits" | "transfers" | "verifications" | "users";
 
 function AdminPage() {
   const { t, lang } = useI18n();
