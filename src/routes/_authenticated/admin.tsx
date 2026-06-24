@@ -337,7 +337,7 @@ function TransfersTab() {
   const act = useMutation({
     mutationFn: async (vars: { id: string; action: "approve" | "reject"; note?: string }) => {
       const fn = vars.action === "approve" ? "approve_transfer" : "reject_transfer";
-      const { error } = await supabase.rpc(fn, { _transfer_id: vars.id, _note: vars.note ?? null });
+      const { error } = await supabase.rpc(fn, { _transfer_id: vars.id, _note: vars.note ?? undefined });
       if (error) throw error;
     },
     onSuccess: () => {
