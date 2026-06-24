@@ -96,7 +96,9 @@ function TransfersPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(lang === "ar" ? "تم الإرسال بنجاح" : "Transfer sent");
+      toast.success(lang === "ar"
+        ? "تم استلام طلب التحويل وحجز المبلغ، بانتظار موافقة الإدارة."
+        : "Transfer queued and amount held — awaiting admin approval.");
       setAmount(""); setNote(""); setRecipient(null); setIdentifier("");
       qc.invalidateQueries({ queryKey: ["transfers"] });
       qc.invalidateQueries({ queryKey: ["wallet"] });
