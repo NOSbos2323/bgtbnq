@@ -39,9 +39,13 @@ function CardsPage() {
     enabled: !!user,
   });
 
+  const activeCount = (cards.data ?? []).filter((c: any) => c.status !== "cancelled").length;
+  const atLimit = activeCount >= 2;
+
   const createCard = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("not signed");
+      if (atLimit) throw new Error(lang === "ar" ? "الحد الأقصى بطاقتان لكل حساب" : "Maximum 2 cards per account");
       const num = Array.from({ length: 16 }, () => Math.floor(Math.random() * 10)).join("");
       const last4 = num.slice(-4);
       const masked = `**** **** **** ${last4}`;
