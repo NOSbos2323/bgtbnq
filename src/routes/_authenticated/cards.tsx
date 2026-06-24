@@ -82,15 +82,28 @@ function CardsPage() {
   return (
     <div className="px-5 pt-8 pb-4 space-y-6">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold">{t("virtual_cards")}</h1>
+        <div>
+          <h1 className="text-2xl font-extrabold">{t("virtual_cards")}</h1>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            {lang === "ar" ? `${activeCount} / 2 بطاقة` : `${activeCount} / 2 cards`}
+          </p>
+        </div>
         <button
           onClick={() => createCard.mutate()}
-          disabled={createCard.isPending}
-          className="inline-flex items-center gap-1.5 rounded-2xl bg-primary text-primary-foreground px-3 py-2 text-sm font-bold neon-emerald disabled:opacity-60"
+          disabled={createCard.isPending || atLimit}
+          className="inline-flex items-center gap-1.5 rounded-2xl bg-primary text-primary-foreground px-3 py-2 text-sm font-bold neon-emerald disabled:opacity-40"
         >
           <Plus className="h-4 w-4" /> {t("create_card")}
         </button>
       </header>
+
+      {atLimit && (
+        <div className="glass-strong rounded-2xl p-3 text-xs text-yellow-300/90 border border-yellow-400/20">
+          {lang === "ar"
+            ? "وصلت للحد الأقصى من البطاقات (2). يمكنك تجميد إحداها أو التواصل مع الإدارة."
+            : "You reached the card limit (2). Freeze one or contact admin."}
+        </div>
+      )}
 
       {cards.data && cards.data.length > 0 ? (
         <div className="space-y-5">
