@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/use-auth";
 import { useI18n, type Lang } from "@/lib/i18n";
 import { toast } from "sonner";
+import { notifyAdmin } from "@/lib/notify-admin";
 import { User as UserIcon, Globe, LogOut, ShieldCheck, Bell, BadgeCheck, Clock, ShieldAlert, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
