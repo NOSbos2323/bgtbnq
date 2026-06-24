@@ -43,6 +43,7 @@ function SettingsPage() {
     onSuccess: () => {
       toast.success(lang === "ar" ? "تم إرسال طلب التوثيق" : "Verification request sent");
       qc.invalidateQueries({ queryKey: ["profile-full"] });
+      notifyAdmin("verification", `New verification request from ${user?.email ?? "user"}`);
     },
     onError: (e: any) => {
       const msg = String(e?.message ?? "");
