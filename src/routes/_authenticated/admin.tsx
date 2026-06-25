@@ -238,7 +238,7 @@ function VerificationsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("verification_requests")
-        .select("id, user_id, status, balance_at_request_usd, created_at, profiles:profiles!verification_requests_user_id_fkey(full_name, email, rib)")
+        .select("id, user_id, status, balance_at_request_usd, created_at, profiles:profiles!verification_requests_user_profile_fkey(full_name, email, rib)")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       return data ?? [];
