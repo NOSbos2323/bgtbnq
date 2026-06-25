@@ -424,7 +424,7 @@ function UsersTab() {
     queryFn: async () => {
       let query = supabase
         .from("profiles")
-        .select("id, full_name, email, rib, deposit_rib, verification_status, is_admin_account, wallets:wallets!wallets_user_id_fkey(balance_usd, frozen_balance)")
+        .select("id, full_name, email, rib, deposit_rib, verification_status, is_admin_account, wallets:wallets!wallets_user_profile_fkey(balance_usd, frozen_balance)")
         .order("created_at", { ascending: false })
         .limit(50);
       if (q.trim()) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
