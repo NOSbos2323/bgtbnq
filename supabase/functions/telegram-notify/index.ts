@@ -1,10 +1,10 @@
-// Telegram admin notifier — sends a message to the configured admin chat.
+// Telegram admin notifier — sends a message to the configured admin chat,
+// with inline Accept / Reject buttons when an actionable record id is supplied.
 // Required project secrets:
 //   TELEGRAM_BOT_TOKEN       (BotFather token)
 //   TELEGRAM_ADMIN_CHAT_ID   (chat id to receive notifications)
 //
-// Body: { text: string, kind?: "deposit" | "transfer" | "verification" | "info" }
-// Auth: requires authenticated user (default verify_jwt = true)
+// Body: { text: string, kind?: "deposit"|"transfer"|"verification"|"info", id?: string }
 
 // deno-lint-ignore-file no-explicit-any
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { text, kind = "info" } = await req.json().catch(() => ({}));
+    const { text, kind = "info", id } = await req.json().catch(() => ({}));
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ ok: false, error: "missing text" }), {
         status: 400,
@@ -42,17 +42,28 @@ Deno.serve(async (req) => {
     : kind === "verification" ? "🪪"
     :                            "🔔";
 
-    const message = `${emoji} *${kind.toUpperCase()}*\n${text}`;
+    const message = `${emoji} *${String(kind).toUpperCase()}*\n${text}`;
+
+    const actionable = id && (kind === "deposit" || kind === "transfer" || kind === "verification");
+    const body: Record<string, unknown> = {
+      chat_id: chatId,
+      text: message,
+      parse_mode: "Markdown",
+      disable_web_page_preview: true,
+    };
+    if (actionable) {
+      body.reply_markup = {
+        inline_keyboard: [[
+          { text: "✅ قبول", callback_data: `approve:${kind}:${id}` },
+          { text: "❌ رفض",  callback_data: `reject:${kind}:${id}` },
+        ]],
+      };
+    }
 
     const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: "Markdown",
-        disable_web_page_preview: true,
-      }),
+      body: JSON.stringify(body),
     });
     const tgJson = await tgRes.json().catch(() => ({}));
 
