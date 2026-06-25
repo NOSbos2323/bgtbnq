@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
   if (req.method === "GET") {
     const url = new URL(req.url);
     if (url.searchParams.get("setup") === "1") {
-      const webhookUrl = `${url.origin}${url.pathname}`;
+      const projectRef = (Deno.env.get("SUPABASE_URL") ?? "").match(/https?:\/\/([^.]+)/)?.[1];
+      const webhookUrl = `https://${projectRef}.supabase.co/functions/v1/telegram-webhook`;
       const res = await fetch(TG(token, "setWebhook"), {
         method: "POST",
         headers: { "content-type": "application/json" },
