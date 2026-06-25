@@ -142,7 +142,7 @@ function DepositsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("deposits")
-        .select("id, amount_usd, amount_dzd, receipt_path, created_at, user_id, profiles:profiles!deposits_user_id_fkey(full_name, email)")
+        .select("id, amount_usd, amount_dzd, receipt_path, created_at, user_id, profiles:profiles!deposits_user_profile_fkey(full_name, email)")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       return data ?? [];
@@ -238,7 +238,7 @@ function VerificationsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("verification_requests")
-        .select("id, user_id, status, balance_at_request_usd, created_at, profiles:profiles!verification_requests_user_id_fkey(full_name, email, rib)")
+        .select("id, user_id, status, balance_at_request_usd, created_at, profiles:profiles!verification_requests_user_profile_fkey(full_name, email, rib)")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       return data ?? [];
@@ -325,8 +325,8 @@ function TransfersTab() {
         .from("transfers")
         .select(`
           id, amount_usd, note, created_at, status,
-          sender:profiles!transfers_sender_id_fkey(id, full_name, email),
-          recipient:profiles!transfers_recipient_id_fkey(id, full_name, email)
+          sender:profiles!transfers_sender_profile_fkey(id, full_name, email),
+          recipient:profiles!transfers_recipient_profile_fkey(id, full_name, email)
         `)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
@@ -424,7 +424,7 @@ function UsersTab() {
     queryFn: async () => {
       let query = supabase
         .from("profiles")
-        .select("id, full_name, email, rib, deposit_rib, verification_status, is_admin_account, wallets:wallets!wallets_user_id_fkey(balance_usd, frozen_balance)")
+        .select("id, full_name, email, rib, deposit_rib, verification_status, is_admin_account, wallets:wallets!wallets_user_profile_fkey(balance_usd, frozen_balance)")
         .order("created_at", { ascending: false })
         .limit(50);
       if (q.trim()) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
