@@ -142,7 +142,7 @@ function DepositsTab() {
     queryFn: async () => {
       const { data } = await supabase
         .from("deposits")
-        .select("id, amount_usd, amount_dzd, receipt_path, created_at, user_id, profiles:profiles!deposits_user_id_fkey(full_name, email)")
+        .select("id, amount_usd, amount_dzd, receipt_path, created_at, user_id, profiles:profiles!deposits_user_profile_fkey(full_name, email)")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
       return data ?? [];
