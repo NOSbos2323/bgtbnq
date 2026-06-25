@@ -729,6 +729,10 @@ export type Database = {
         }
       }
       set_my_telegram_chat: { Args: { _chat_id: string }; Returns: undefined }
+      telegram_admin_action: {
+        Args: { _action: string; _id: string; _kind: string; _note?: string }
+        Returns: string
+      }
       topup_card: {
         Args: { _amount: number; _card_id: string }
         Returns: {

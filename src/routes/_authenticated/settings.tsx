@@ -37,13 +37,14 @@ function SettingsPage() {
 
   const requestVerify = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc("request_verification");
+      const { data, error } = await supabase.rpc("request_verification");
       if (error) throw error;
+      return data as { id: string } | null;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success(lang === "ar" ? "تم إرسال طلب التوثيق" : "Verification request sent");
       qc.invalidateQueries({ queryKey: ["profile-full"] });
-      notifyAdmin("verification", `New verification request from ${user?.email ?? "user"}`);
+      notifyAdmin("verification", `New verification request from ${user?.email ?? "user"}`, data?.id);
     },
     onError: (e: any) => {
       const msg = String(e?.message ?? "");

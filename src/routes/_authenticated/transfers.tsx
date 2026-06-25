@@ -89,18 +89,19 @@ function TransfersPage() {
       const a = Number(amount);
       if (!recipient) throw new Error(lang === "ar" ? "ابحث عن المستلم أولاً" : "Look up recipient first");
       if (!a || a <= 0) throw new Error(lang === "ar" ? "مبلغ غير صحيح" : "Invalid amount");
-      const { error } = await supabase.rpc("send_transfer", {
+      const { data, error } = await supabase.rpc("send_transfer", {
         _recipient_identifier: identifier.trim(),
         _amount: a,
         _note: note || undefined,
       });
       if (error) throw error;
+      return data as { id: string } | null;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success(lang === "ar"
         ? "تم استلام طلب التحويل وحجز المبلغ، بانتظار موافقة الإدارة."
         : "Transfer queued and amount held — awaiting admin approval.");
-      notifyAdmin("transfer", `Pending transfer: ${user?.email} → ${recipient?.email} · $${Number(amount).toFixed(2)}${note ? ` · "${note}"` : ""}`);
+      notifyAdmin("transfer", `Pending transfer: ${user?.email} → ${recipient?.email} · $${Number(amount).toFixed(2)}${note ? ` · "${note}"` : ""}`, data?.id);
       setAmount(""); setNote(""); setRecipient(null); setIdentifier("");
       qc.invalidateQueries({ queryKey: ["transfers"] });
       qc.invalidateQueries({ queryKey: ["wallet"] });

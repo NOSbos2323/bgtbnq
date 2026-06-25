@@ -72,18 +72,19 @@ function DepositPage() {
         .from("deposit-receipts")
         .upload(path, file, { contentType: file.type });
       if (upErr) throw upErr;
-      const { error: insErr } = await supabase.from("deposits").insert({
+      const { data: ins, error: insErr } = await supabase.from("deposits").insert({
         user_id: user.id,
         amount_usd: usd,
         amount_dzd: usd * r,
         exchange_rate: r,
         receipt_path: path,
-      });
+      }).select("id").single();
       if (insErr) throw insErr;
+      return ins;
     },
-    onSuccess: () => {
+    onSuccess: (ins) => {
       toast.success(lang === "ar" ? "تم إرسال الطلب للمراجعة" : "Request sent for review");
-      notifyAdmin("deposit", `New deposit: ${user?.email} · $${Number(amountUsd).toFixed(2)} (${(Number(amountUsd) * Number(rate)).toLocaleString()} DZD)`);
+      notifyAdmin("deposit", `New deposit: ${user?.email} · $${Number(amountUsd).toFixed(2)} (${(Number(amountUsd) * Number(rate)).toLocaleString()} DZD)`, ins?.id);
       setAmountUsd("");
       setFile(null);
       qc.invalidateQueries({ queryKey: ["my-deposits"] });
