@@ -325,8 +325,8 @@ function TransfersTab() {
         .from("transfers")
         .select(`
           id, amount_usd, note, created_at, status,
-          sender:profiles!transfers_sender_id_fkey(id, full_name, email),
-          recipient:profiles!transfers_recipient_id_fkey(id, full_name, email)
+          sender:profiles!transfers_sender_profile_fkey(id, full_name, email),
+          recipient:profiles!transfers_recipient_profile_fkey(id, full_name, email)
         `)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
