@@ -36,6 +36,31 @@ Deno.serve(async (req) => {
     return new Response("telegram not configured", { status: 200 });
   }
 
+  // One-shot self-registration: GET /telegram-webhook?setup=1 registers this
+  // URL as the bot's webhook (uses the request's own origin) and configures
+  // the shared secret_token Telegram echoes back on every callback.
+  if (req.method === "GET") {
+    const url = new URL(req.url);
+    if (url.searchParams.get("setup") === "1") {
+      const webhookUrl = `${url.origin}${url.pathname}`;
+      const res = await fetch(TG(token, "setWebhook"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          url: webhookUrl,
+          secret_token: webhookSecret ?? undefined,
+          allowed_updates: ["callback_query"],
+          drop_pending_updates: true,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      return new Response(JSON.stringify({ webhookUrl, telegram: json }, null, 2), {
+        status: 200, headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response("ok");
+  }
+
   // Verify Telegram secret token header.
   if (webhookSecret) {
     const got = req.headers.get("x-telegram-bot-api-secret-token");
