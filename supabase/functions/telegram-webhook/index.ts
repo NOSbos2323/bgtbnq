@@ -1,14 +1,15 @@
-// Telegram webhook — receives callback_query events from Accept / Reject buttons
-// posted by telegram-notify, then drives the admin approve/reject RPCs via the
-// service-role client and acknowledges the user inside Telegram.
+// Telegram webhook — handles two update kinds:
+//   • callback_query from inline buttons:
+//       - approve|reject:<kind>:<id>   → runs telegram_admin_action
+//       - assign_rib:deposit:<id>      → prompts admin to reply with the RIB
+//   • message with reply_to_message that carries a "[DEP:<id>]" marker
+//       → treats the admin's text as the RIB and calls assign_rib
 //
 // Required project secrets:
 //   TELEGRAM_BOT_TOKEN
 //   TELEGRAM_ADMIN_CHAT_ID
-//   TELEGRAM_WEBHOOK_SECRET   (shared secret echoed back by Telegram in the
-//                              X-Telegram-Bot-Api-Secret-Token header)
-//   SUPABASE_URL              (auto-provided)
-//   SUPABASE_SERVICE_ROLE_KEY (auto-provided)
+//   TELEGRAM_WEBHOOK_SECRET
+//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (auto-provided)
 
 // deno-lint-ignore-file no-explicit-any
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -19,12 +20,13 @@ const TG = (token: string, method: string) =>
 
 async function tg(token: string, method: string, payload: unknown) {
   try {
-    await fetch(TG(token, method), {
+    const r = await fetch(TG(token, method), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
-  } catch { /* silent */ }
+    return await r.json().catch(() => ({}));
+  } catch { return {}; }
 }
 
 Deno.serve(async (req) => {
@@ -32,13 +34,9 @@ Deno.serve(async (req) => {
   const adminChatId = Deno.env.get("TELEGRAM_ADMIN_CHAT_ID");
   const webhookSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
 
-  if (!token || !adminChatId) {
-    return new Response("telegram not configured", { status: 200 });
-  }
+  if (!token || !adminChatId) return new Response("telegram not configured", { status: 200 });
 
-  // One-shot self-registration: GET /telegram-webhook?setup=1 registers this
-  // URL as the bot's webhook (uses the request's own origin) and configures
-  // the shared secret_token Telegram echoes back on every callback.
+  // Self-registration
   if (req.method === "GET") {
     const url = new URL(req.url);
     if (url.searchParams.get("setup") === "1") {
@@ -50,7 +48,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           url: webhookUrl,
           secret_token: webhookSecret ?? undefined,
-          allowed_updates: ["callback_query"],
+          allowed_updates: ["callback_query", "message"],
           drop_pending_updates: true,
         }),
       });
@@ -62,36 +60,13 @@ Deno.serve(async (req) => {
     return new Response("ok");
   }
 
-  // Verify Telegram secret token header.
   if (webhookSecret) {
     const got = req.headers.get("x-telegram-bot-api-secret-token");
-    if (got !== webhookSecret) {
-      return new Response("unauthorized", { status: 401 });
-    }
+    if (got !== webhookSecret) return new Response("unauthorized", { status: 401 });
   }
 
   let update: any = null;
   try { update = await req.json(); } catch { return new Response("ok"); }
-
-  const cb = update?.callback_query;
-  if (!cb) return new Response("ok"); // ignore non-callback updates
-
-  const fromChat = String(cb.message?.chat?.id ?? "");
-  if (fromChat !== String(adminChatId)) {
-    await tg(token, "answerCallbackQuery", {
-      callback_query_id: cb.id,
-      text: "Unauthorized chat",
-      show_alert: true,
-    });
-    return new Response("ok");
-  }
-
-  const data: string = cb.data ?? "";
-  const [action, kind, id] = data.split(":");
-  if (!action || !kind || !id) {
-    await tg(token, "answerCallbackQuery", { callback_query_id: cb.id, text: "Bad payload" });
-    return new Response("ok");
-  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -99,31 +74,87 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  const { error } = await supabase.rpc("telegram_admin_action", {
-    _kind: kind,
-    _id: id,
-    _action: action,
-    _note: action === "reject" ? "Rejected via Telegram" : null,
-  });
+  // ─────────── callback_query (inline buttons) ───────────
+  const cb = update?.callback_query;
+  if (cb) {
+    const fromChat = String(cb.message?.chat?.id ?? "");
+    if (fromChat !== String(adminChatId)) {
+      await tg(token, "answerCallbackQuery", { callback_query_id: cb.id, text: "Unauthorized", show_alert: true });
+      return new Response("ok");
+    }
 
-  const ok = !error;
-  const verdict = action === "approve" ? "✅ تم القبول" : "❌ تم الرفض";
-  const status = ok ? verdict : `⚠️ فشل: ${error?.message ?? "unknown error"}`;
+    const data: string = cb.data ?? "";
+    const [action, kind, id] = data.split(":");
+    if (!action || !kind || !id) {
+      await tg(token, "answerCallbackQuery", { callback_query_id: cb.id, text: "Bad payload" });
+      return new Response("ok");
+    }
 
-  await tg(token, "answerCallbackQuery", {
-    callback_query_id: cb.id,
-    text: ok ? verdict : "فشلت العملية",
-    show_alert: !ok,
-  });
+    // Special path: admin clicked "Assign RIP" for a new deposit
+    if (action === "assign_rib" && kind === "deposit") {
+      await tg(token, "answerCallbackQuery", { callback_query_id: cb.id, text: "أدخل رقم RIP…" });
+      await tg(token, "sendMessage", {
+        chat_id: cb.message.chat.id,
+        text: `📝 أرسل رقم RIP الآن كرد على هذه الرسالة.\n[DEP:${id}]`,
+        reply_markup: { force_reply: true, selective: true },
+      });
+      // Strip buttons from the original notification
+      await tg(token, "editMessageReplyMarkup", {
+        chat_id: cb.message.chat.id,
+        message_id: cb.message.message_id,
+        reply_markup: { inline_keyboard: [] },
+      });
+      return new Response("ok");
+    }
 
-  // Append the verdict to the original message and strip the buttons.
-  const originalText: string = cb.message?.text ?? "";
-  await tg(token, "editMessageText", {
-    chat_id: cb.message.chat.id,
-    message_id: cb.message.message_id,
-    text: `${originalText}\n\n— ${status}`,
-    disable_web_page_preview: true,
-  });
+    const { error } = await supabase.rpc("telegram_admin_action", {
+      _kind: kind, _id: id, _action: action,
+      _note: action === "reject" ? "Rejected via Telegram" : null,
+    });
+    const ok = !error;
+    const verdict = action === "approve" ? "✅ تم القبول" : "❌ تم الرفض";
+    const status = ok ? verdict : `⚠️ فشل: ${error?.message ?? "unknown"}`;
+
+    await tg(token, "answerCallbackQuery", {
+      callback_query_id: cb.id, text: ok ? verdict : "فشلت العملية", show_alert: !ok,
+    });
+    await tg(token, "editMessageText", {
+      chat_id: cb.message.chat.id,
+      message_id: cb.message.message_id,
+      text: `${cb.message?.text ?? ""}\n\n— ${status}`,
+      disable_web_page_preview: true,
+    });
+    return new Response("ok");
+  }
+
+  // ─────────── message replies (RIP entry) ───────────
+  const msg = update?.message;
+  if (msg && String(msg.chat?.id) === String(adminChatId)) {
+    const replied = msg.reply_to_message?.text ?? "";
+    const match = replied.match(/\[DEP:([0-9a-f-]{36})\]/i);
+    if (match && typeof msg.text === "string") {
+      const depId = match[1];
+      const rib = msg.text.trim();
+      const { error } = await supabase.rpc("telegram_admin_action", {
+        _kind: "deposit", _id: depId, _action: "assign_rib", _note: rib,
+      });
+      if (error) {
+        await tg(token, "sendMessage", {
+          chat_id: msg.chat.id,
+          reply_to_message_id: msg.message_id,
+          text: `⚠️ فشل تعيين RIP: ${error.message}`,
+        });
+      } else {
+        await tg(token, "sendMessage", {
+          chat_id: msg.chat.id,
+          reply_to_message_id: msg.message_id,
+          text: `✅ تم إرسال RIP للمستخدم. لديه 5 دقائق لرفع الوصل.\nRIP: \`${rib}\``,
+          parse_mode: "Markdown",
+        });
+      }
+      return new Response("ok");
+    }
+  }
 
   return new Response("ok");
 });
