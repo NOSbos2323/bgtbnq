@@ -72,7 +72,7 @@ function DepositPage() {
     onSuccess: (dep: any) => {
       setActiveId(dep.id);
       notifyAdmin(
-        "deposit_new" as any,
+        "deposit_new",
         `New deposit request: ${user?.email} · $${Number(dep.amount_usd).toFixed(2)} (${Number(dep.amount_dzd).toLocaleString()} DZD)`,
         dep.id,
       );
