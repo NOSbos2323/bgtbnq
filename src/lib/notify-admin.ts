@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-type Kind = "deposit" | "transfer" | "verification" | "info";
+type Kind = "deposit" | "deposit_new" | "transfer" | "verification" | "info";
 
 /**
  * Fire-and-forget Telegram notification to the admin chat.
