@@ -495,8 +495,7 @@ export type Database = {
         Args: { _delta: number; _reason?: string; _user_id: string }
         Returns: number
       }
-      admin_get_user_details: { Args: { _user_id: string }; Returns: Json }
-      admin_set_deposit_rib: {
+      admin_assign_deposit_rib: {
         Args: { _deposit_id: string; _rib: string }
         Returns: {
           admin_note: string | null
@@ -516,6 +515,35 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "deposits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_get_user_details: { Args: { _user_id: string }; Returns: Json }
+      admin_set_deposit_rib: {
+        Args: { _rib: string; _user_id: string }
+        Returns: {
+          avatar_url: string | null
+          created_at: string
+          deposit_rib: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin_account: boolean
+          language: string
+          phone: string | null
+          referral_code: string
+          referred_by: string | null
+          rib: string | null
+          telegram_chat_id: string | null
+          updated_at: string
+          verification_note: string | null
+          verification_status: string
+          verified_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
           isOneToOne: true
           isSetofReturn: false
         }
