@@ -40,12 +40,14 @@ export type Database = {
           admin_note: string | null
           amount_dzd: number
           amount_usd: number
+          assigned_rib: string | null
           created_at: string
           exchange_rate: number
           id: string
-          receipt_path: string
+          receipt_path: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          rib_deadline: string | null
           status: Database["public"]["Enums"]["deposit_status"]
           user_id: string
         }
@@ -53,12 +55,14 @@ export type Database = {
           admin_note?: string | null
           amount_dzd: number
           amount_usd: number
+          assigned_rib?: string | null
           created_at?: string
           exchange_rate: number
           id?: string
-          receipt_path: string
+          receipt_path?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          rib_deadline?: string | null
           status?: Database["public"]["Enums"]["deposit_status"]
           user_id: string
         }
@@ -66,12 +70,14 @@ export type Database = {
           admin_note?: string | null
           amount_dzd?: number
           amount_usd?: number
+          assigned_rib?: string | null
           created_at?: string
           exchange_rate?: number
           id?: string
-          receipt_path?: string
+          receipt_path?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          rib_deadline?: string | null
           status?: Database["public"]["Enums"]["deposit_status"]
           user_id?: string
         }
@@ -491,29 +497,25 @@ export type Database = {
       }
       admin_get_user_details: { Args: { _user_id: string }; Returns: Json }
       admin_set_deposit_rib: {
-        Args: { _rib: string; _user_id: string }
+        Args: { _deposit_id: string; _rib: string }
         Returns: {
-          avatar_url: string | null
+          admin_note: string | null
+          amount_dzd: number
+          amount_usd: number
+          assigned_rib: string | null
           created_at: string
-          deposit_rib: string | null
-          email: string | null
-          full_name: string | null
+          exchange_rate: number
           id: string
-          is_admin_account: boolean
-          language: string
-          phone: string | null
-          referral_code: string
-          referred_by: string | null
-          rib: string | null
-          telegram_chat_id: string | null
-          updated_at: string
-          verification_note: string | null
-          verification_status: string
-          verified_at: string | null
+          receipt_path: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rib_deadline: string | null
+          status: Database["public"]["Enums"]["deposit_status"]
+          user_id: string
         }
         SetofOptions: {
           from: "*"
-          to: "profiles"
+          to: "deposits"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -552,12 +554,14 @@ export type Database = {
           admin_note: string | null
           amount_dzd: number
           amount_usd: number
+          assigned_rib: string | null
           created_at: string
           exchange_rate: number
           id: string
-          receipt_path: string
+          receipt_path: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          rib_deadline: string | null
           status: Database["public"]["Enums"]["deposit_status"]
           user_id: string
         }
@@ -608,6 +612,30 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_deposit_request: {
+        Args: { _amount_usd: number; _rate: number }
+        Returns: {
+          admin_note: string | null
+          amount_dzd: number
+          amount_usd: number
+          assigned_rib: string | null
+          created_at: string
+          exchange_rate: number
+          id: string
+          receipt_path: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rib_deadline: string | null
+          status: Database["public"]["Enums"]["deposit_status"]
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deposits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       gen_referral_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -632,12 +660,14 @@ export type Database = {
           admin_note: string | null
           amount_dzd: number
           amount_usd: number
+          assigned_rib: string | null
           created_at: string
           exchange_rate: number
           id: string
-          receipt_path: string
+          receipt_path: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          rib_deadline: string | null
           status: Database["public"]["Enums"]["deposit_status"]
           user_id: string
         }
@@ -729,6 +759,30 @@ export type Database = {
         }
       }
       set_my_telegram_chat: { Args: { _chat_id: string }; Returns: undefined }
+      submit_deposit_receipt: {
+        Args: { _deposit_id: string; _receipt_path: string }
+        Returns: {
+          admin_note: string | null
+          amount_dzd: number
+          amount_usd: number
+          assigned_rib: string | null
+          created_at: string
+          exchange_rate: number
+          id: string
+          receipt_path: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          rib_deadline: string | null
+          status: Database["public"]["Enums"]["deposit_status"]
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "deposits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       telegram_admin_action: {
         Args: { _action: string; _id: string; _kind: string; _note?: string }
         Returns: string
@@ -759,7 +813,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       card_status: "active" | "frozen" | "cancelled"
-      deposit_status: "pending" | "approved" | "rejected"
+      deposit_status:
+        | "awaiting_rib"
+        | "awaiting_receipt"
+        | "pending"
+        | "approved"
+        | "rejected"
       loan_status:
         | "pending"
         | "approved"
@@ -908,7 +967,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       card_status: ["active", "frozen", "cancelled"],
-      deposit_status: ["pending", "approved", "rejected"],
+      deposit_status: [
+        "awaiting_rib",
+        "awaiting_receipt",
+        "pending",
+        "approved",
+        "rejected",
+      ],
       loan_status: ["pending", "approved", "rejected", "repaying", "completed"],
       tx_type: [
         "deposit",
